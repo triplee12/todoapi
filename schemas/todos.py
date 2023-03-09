@@ -10,6 +10,31 @@ class TodosSchema(BaseModel):
     title: str
     desc: str
 
+    class Config:
+        """Configuration for documentation."""
 
-class TodosRes(TodosSchema):
-    """Todos schema for todo get validation."""
+        Schema_extra: dict[str, dict[str, str]] = {
+            "Example": {
+                "id": 1,
+                "title": "Title here",
+                "desc": "Description here"
+            }
+        }
+        orm_mode: bool = True
+
+
+class TodoItem(BaseModel):
+    """Todo schema for retrieving single todo."""
+
+    title: str
+    desc: str
+
+    class Config:
+        """Configuration for documentation."""
+
+        Schema_extra: dict[str, dict[str, str]] = {
+            "Example": {
+                "title": "Title here",
+                "desc": "Description here"
+            }
+        }
