@@ -1,0 +1,62 @@
+{% extends 'base.html' %} {% block content %}
+<main class="container">
+  <hr />
+  <section class="container-fluid">
+    <form method="post" action="/todos/create">
+      <div class="col-auto">
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            name="title"
+            value="{{ title }}"
+            class="form-control"
+            placeholder="Title"
+            aria-label="Add title"
+            aria-describedby="button-addon2"
+          />
+          <textarea
+            name="desc"
+            value="{{ desc }}"
+            class="form-control"
+            placeholder="Description"
+            aria-label="Add description"
+            aria-describedby="button-addon2"
+          >
+          </textarea>
+          <button
+            class="btn btn-outline-primary"
+            type="submit"
+            id="button-addon2"
+            data-mdb-ripple-color="dark"
+          >
+            Add Todo
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+  {% if todo %}
+  <article class="card container-fluid">
+    <br />
+    <h4>Todo Id {{todo.id}}</h4>
+    <h2><strong>{{todo.title}}</strong></h2>
+    <p>{{todo.desc}}</p>
+  </article>
+  {% else %}
+  <section class="container-fluid">
+    <h2 align="center">Todos</h2>
+    <br />
+    <div class="card">
+      <ul class="list-group list-group-flush">
+        {% for todo in todos %}
+        <li class="list-group-item">
+          {{loop.index}}.
+          <a href="{{loop.index}}">{{todo.title}}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+</main>
+{% endblock content %}

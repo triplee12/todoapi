@@ -1,8 +1,14 @@
 #!/usr/bin/python3
 """Todo module."""
 from typing import List
-from fastapi import APIRouter, Path, HTTPException, status
+from fastapi import (
+    APIRouter, Path, HTTPException, status, Depends, Request
+)
+from fastapi.templating import Jinja2Templates
+from starlette.responses import RedirectResponse
 from schemas.todos import TodosSchema, TodoItem
+
+templates: Jinja2Templates = Jinja2Templates(directory="templates")
 
 todo_router: APIRouter = APIRouter(prefix="/todos", tags=["Todos"])
 todos_list: list[dict[int, str, str]] = [
@@ -26,29 +32,47 @@ def idx(todo_id: int) -> int:
 
 
 @todo_router.get("/", response_model=List[TodosSchema])
-async def get_todos() -> list[dict[int, str, str]]:
+async def get_todos(request: Request) -> list[dict[int, str, str]]:
     """Get list of all available Todos."""
-    return todos_list
+    return templates.TemplateResponse(
+        "todos/todo.html",
+        {"request": request, "todos": todos_list}
+    )
 
 
 @todo_router.post("/create", status_code=status.HTTP_201_CREATED)
-async def add_todos(todo: TodosSchema) -> dict:
+async def add_todos(
+    request: Request,
+    todo: TodosSchema = Depends(TodosSchema.as_form)
+) -> dict:
     """Add a new Todos to the list of avaikable Todos.
 
     Returns:
         dict: todos object
     """
+    todo.id = len(todos_list) + 1
     todos_list.append(todo.dict())
-    print(todos_list)
-    return {"message": "New Todos added successfully"}
+    url = todo_router.url_path_for("get_todos")
+    response: RedirectResponse = RedirectResponse(url=url)
+    return templates.TemplateResponse(
+        "todos/todo.html",
+        {"request": request, "redirect": response},
+        status_code=201
+    )
 
 
 @todo_router.get("/{todo_id}", response_model=TodoItem)
-async def get_single_todo(todo_id: int = Path(..., ge=1, le=100)) -> dict:
+async def get_single_todo(
+    request: Request,
+    todo_id: int = Path(..., ge=1, le=100)
+) -> dict:
     """Retrive todo."""
     todo: dict = retrieve(todo_id)
     if todo:
-        return todo
+        return templates.TemplateResponse(
+            "todos/todo.html",
+            {"request": request, "todo": todo}
+        )
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Todo not found"
@@ -56,10 +80,10 @@ async def get_single_todo(todo_id: int = Path(..., ge=1, le=100)) -> dict:
 
 
 @todo_router.put(
-        "/update/{todo_id}",
-        status_code=status.HTTP_201_CREATED,
-        response_model=TodoItem
-    )
+    "/update/{todo_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TodoItem
+)
 async def update_todo(
     to_update: TodoItem,
     todo_id: int = Path(..., ge=1, le=100)
